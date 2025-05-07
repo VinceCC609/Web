@@ -93,6 +93,10 @@
       </div>
     </div>
   </div>
+  <div class="container-move" v-if="parallelogram">
+    <div class="parallelogram left-to-right"></div>
+    <div class="parallelogram right-to-left"></div>
+  </div>
 </template>
 
 <script>
@@ -101,21 +105,23 @@ export default ({
   name: 'HorizontalMenu',
   data () {
     return {
+      parallelogram: false,
       menuItems: [
         {
           name: '選項',
           submenu: [
             { name: 'TabControl', tabAppear: true },
-            { name: '奶茶訂單', teaOrder: true }
+            { name: '奶茶訂單', teaOrder: true },
+            { name: '移動', parallelogram: true }
           ]
         },
         {
           name: '聖獸',
           submenu: [
-            { name: '朱雀', image: '/image/0.jpg' },
-            { name: '玄武', image: '/image/1.jpg' },
-            { name: '青龍', image: '/image/2.jpg' },
-            { name: '白虎', image: '/image/3.jpg' }
+            { name: '朱雀', image: './image/0.jpg' },
+            { name: '玄武', image: './image/1.jpg' },
+            { name: '青龍', image: './image/2.jpg' },
+            { name: '白虎', image: './image/3.jpg' }
           ]
         },
         {
@@ -194,6 +200,14 @@ export default ({
     }
   },
   methods: {
+    init () {
+      this.parallelogram = null
+      this.teaOrder = null
+      this.tabAppear = null
+      this.selectedImage = null
+      this.selectedAreaChartData = null
+      this.selectedAreaBarChartData = null
+    },
     // 產生訂單
     addOrder () {
       // 檢查是否有選擇的數量
@@ -225,43 +239,27 @@ export default ({
       return colors[index % colors.length]
     },
     selectItem (item) {
+      this.init()
       if (item.image) {
         this.selectedImage = item.image
-        this.selectedAreaChartData = null
-        this.selectedAreaBarChartData = null
-        this.tabAppear = null
-        this.teaOrder = null
-      } else {
-        this.selectedImage = ''
       }
       if (item.selectedArea) {
-        this.tabAppear = null
         if (item.selectedArea === 'chartData') {
-          this.selectedImage = ''
           this.selectedAreaChartData = item.name
-          this.selectedAreaBarChartData = null
-          this.teaOrder = null
         } else if (item.selectedArea === 'barChartData') {
-          this.selectedImage = ''
-          this.selectedAreaChartData = null
           this.selectedAreaBarChartData = item.name
-          this.teaOrder = null
         }
       }
       if (item.tabAppear) {
         this.tabAppear = true
-        this.selectedImage = null
-        this.selectedAreaChartData = null
-        this.selectedAreaBarChartData = null
-        this.teaOrder = null
       }
 
       if (item.teaOrder) {
         this.teaOrder = item.teaOrder
-        this.tabAppear = null
-        this.selectedImage = null
-        this.selectedAreaChartData = null
-        this.selectedAreaBarChartData = null
+      }
+
+      if (item.parallelogram) {
+        this.parallelogram = true
       }
     }
   }
@@ -269,6 +267,45 @@ export default ({
 </script>
 
 <style scoped>
+.container-move {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+.parallelogram {
+  position: absolute;
+  width: 200px;
+  height: 100px;
+  background-color: #00bcd4;
+  transform: skew(-20deg);
+}
+
+.left-to-right {
+  left: -250px;
+  top: 30%;
+  animation: moveRight 3s ease-out forwards;
+}
+
+.right-to-left {
+  right: -250px;
+  top: 60%;
+  animation: moveLeft 3s ease-out forwards;
+}
+
+@keyframes moveRight {
+  to {
+    left: 50%;
+    transform: translateX(-50%) skew(-20deg);
+  }
+}
+
+@keyframes moveLeft {
+  to {
+    right: 50%;
+    transform: translateX(50%) skew(-20deg);
+  }
+}
 .checkbox-container {
   display: flex;
   flex-direction: column;
