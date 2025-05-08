@@ -93,6 +93,8 @@
       </div>
     </div>
   </div>
+
+   <!-- 移動動畫 -->
   <div class="container-move" v-if="parallelogram">
     <div class="parallelogram left-to-right"></div>
     <div class="parallelogram right-to-left"></div>
@@ -258,8 +260,12 @@ export default ({
         this.teaOrder = item.teaOrder
       }
 
+      // 移動動畫區
       if (item.parallelogram) {
         this.parallelogram = true
+        document.body.style.backgroundColor = 'black'
+      } else {
+        document.body.style.backgroundColor = 'white'
       }
     }
   }
