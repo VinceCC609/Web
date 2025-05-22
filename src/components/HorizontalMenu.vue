@@ -99,6 +99,47 @@
     <div class="parallelogram left-to-right"></div>
     <div class="parallelogram right-to-left"></div>
   </div>
+
+  <!-- 景點介紹-->
+  <div class="container" v-if="attractionsIntroduction">
+    <!-- 每列兩筆資料 -->
+    <div v-for="(row, rowIndex) in rows" :key="rowIndex" class="row justify-content-center" style="display: flex; margin-bottom: 10px;">
+      <div class="col" v-for="(item, colIndex) in row" :key="colIndex" style="flex: 1; padding: 5px;">
+        <div class="card w-100">
+          <div class="card bg-dark text-white text-left">
+            <img class="card-img-top img-cover" :src="item.Picture1" alt="景點圖片" />
+            <div class="card-img-overlay d-flex justify-content-between align-items-end p-0 px-3"
+              style="background-color: rgba(0, 0, 0, .2)">
+              <h5 class="card-img-title-lg">{{ item.Name }}</h5>
+              <h5 class="card-img-title-sm">{{ item.Zone }}</h5>
+            </div>
+          </div>
+          <div class="card-body text-left">
+            <p class="card-text"><i class="far fa-clock fa-clock-time"></i>&nbsp;{{ item.Opentime }}</p>
+            <p class="card-text"><i class="fas fa-map-marker-alt fa-map-gps"></i>&nbsp;{{ item.Add }}</p>
+            <p class="card-text"><i class="fas fa-mobile-alt fa-mobile"></i>&nbsp;{{ item.Tel }}</p>
+            <p v-if="item.Ticketinfo"><i class="fas fa-tags text-warning"></i>&nbsp;{{ item.Ticketinfo }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 分頁按鈕 -->
+    <div class="flex-container d-flex justify-content-center mt-4 pagination-custom" style="display: flex;
+      justify-content: center;">
+      <a href="#" class="page-link" :class="{ disabled: currentPage === 1 }" @click.prevent="setPage(currentPage - 1)">
+        Previous
+      </a>
+      <span v-for="page in totalPages" :key="page" class="page-number">
+        <a href="#" class="page-link" :class="{ active : page === currentPage }" @click.prevent="setPage(page)">
+          {{ page }}
+        </a>
+      </span>
+      <a href="#" class="page-link" :class="{ disabled: currentPage === totalPages }" @click.prevent="setPage(currentPage + 1)">
+        Next
+      </a>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -107,6 +148,13 @@ export default ({
   name: 'HorizontalMenu',
   data () {
     return {
+      // 景點介紹開始
+      attractionsIntroduction: false,
+      allData: [],
+      currentPage: 1,
+      perPage: 8,
+      paginatedRows: [],
+      // 景點介紹結束
       parallelogram: false,
       menuItems: [
         {
@@ -114,7 +162,8 @@ export default ({
           submenu: [
             { name: 'TabControl', tabAppear: true },
             { name: '奶茶訂單', teaOrder: true },
-            { name: '移動', parallelogram: true }
+            { name: '移動', parallelogram: true },
+            { name: '景點介紹', attractionsIntroduction: true }
           ]
         },
         {
@@ -177,12 +226,31 @@ export default ({
     }
   },
   computed: {
+    // 景點介紹
+    rows () {
+      if (!Array.isArray(this.allData)) return []
+
+      const start = (this.currentPage - 1) * this.perPage
+      const pageItems = this.allData.slice(start, start + this.perPage)
+
+      const result = []
+      for (let i = 0; i < pageItems.length; i += 4) {
+        result.push(pageItems.slice(i, i + 4))
+      }
+
+      return result
+    },
+    totalPages () {
+      return Math.ceil(this.allData.length / this.perPage)
+    },
+    // 奶茶訂單
     totalPrice () {
       let total = 0
       total += this.orderDetails.pearlMilkTea * this.drinkPrices.pearlMilkTea
       total += this.orderDetails.jasmineMilkTea * this.drinkPrices.jasmineMilkTea
       return total
     },
+    // 圓餅圖
     pieChartStyle () {
       const totalArea = this.areas.reduce((sum, area) => sum + area.area, 0)
       let startAngle = 0
@@ -203,12 +271,24 @@ export default ({
   },
   methods: {
     init () {
-      this.parallelogram = null
-      this.teaOrder = null
-      this.tabAppear = null
-      this.selectedImage = null
-      this.selectedAreaChartData = null
-      this.selectedAreaBarChartData = null
+      this.parallelogram = false
+      this.teaOrder = false
+      this.tabAppear = false
+      this.selectedImage = ''
+      this.selectedAreaChartData = ''
+      this.selectedAreaBarChartData = ''
+      this.attractionsIntroduction = false
+    },
+    // 景點介紹
+    async fetchData () {
+      const res = await fetch('https://raw.githubusercontent.com/hexschool/KCGTravel/refs/heads/master/datastore_search.json')
+      const json = await res.json()
+      this.allData = json.result.records
+    },
+    setPage (page) {
+      if (page >= 1 && page <= this.totalPages) {
+        this.currentPage = page
+      }
     },
     // 產生訂單
     addOrder () {
@@ -267,12 +347,56 @@ export default ({
       } else {
         document.body.style.backgroundColor = 'white'
       }
+
+      if (item.attractionsIntroduction) {
+        this.attractionsIntroduction = true
+      }
     }
+  },
+  mounted () {
+    this.fetchData() // 景點介紹
   }
 })
 </script>
 
 <style scoped>
+/* 景點介紹開始 */
+.pagination-custom {
+  gap: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.page-link {
+  cursor: pointer;
+  color: #007bff;
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+}
+
+.page-link.disabled {
+  pointer-events: none;
+  color: #6c757d;
+}
+
+.page-link.active {
+  font-weight: bold;
+  color: blue;
+  text-decoration: underline;
+}
+
+.page-number {}
+
+.img-cover {
+  object-fit: contain;
+  width: 100%;
+  height: 200px;
+}
+.flex-container {
+  display: flex;
+  justify-content: center; /* 水平置中 */
+}
+/* 景點介紹結束 */
 .container-move {
   position: relative;
   width: 100vw;
@@ -473,6 +597,7 @@ button {
   padding: 0;
   margin: 0;
   text-align: right;
+  z-index: 1000;
 }
 
 .submenu-item {
